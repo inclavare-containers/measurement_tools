@@ -1,0 +1,25 @@
+# Example configuration for Runtime Measurer
+
+# ttrpc endpoint for Attestation Agent
+attestation_agent_socket = "unix:///run/confidential-containers/attestation-agent/attestation-agent.sock"
+
+[file_measurement]
+enable = true
+pcr_index = 16 # Use a different PCR from AA's internal file measurement if needed
+domain = "file"
+operation = "measure"
+hash_algorithm = "sha256" # Options: sha256, sha384
+files = [
+  "/etc/hostname",
+  "/usr/bin/attestation-agent",
+  "/etc/*.conf"
+]
+
+# Future measurer configurations can be added here, e.g.:
+# [process_measurement]
+# enable = false
+# ... other configs
+
+# [container_image_measurement]
+# enable = false
+# ... other configs 
