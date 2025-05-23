@@ -73,4 +73,4 @@ impl Config {
             .with_context(|| format!("Failed to parse TOML from config file: {:?}", path))?;
         Ok(config)
     }
-} 
+}

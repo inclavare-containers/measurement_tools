@@ -39,7 +39,9 @@ impl FileMeasurer {
                         hex::encode(hasher.finalize())
                     }
                     other => {
-                        return Err(MeasurementError::UnsupportedHashAlgorithm(other.to_string()));
+                        return Err(MeasurementError::UnsupportedHashAlgorithm(
+                            other.to_string(),
+                        ));
                     }
                 };
 
@@ -105,7 +107,12 @@ impl Measurable for FileMeasurer {
                                 if path.is_file() {
                                     let path_str = path.to_string_lossy().to_string();
                                     if measured_files.insert(path_str.clone()) {
-                                        self.measure_single_file(&path_str, fm_config, aa_client.clone()).await?;
+                                        self.measure_single_file(
+                                            &path_str,
+                                            fm_config,
+                                            aa_client.clone(),
+                                        )
+                                        .await?;
                                     } else {
                                         debug!("Skipping already measured file: {}", path_str);
                                     }
@@ -132,4 +139,4 @@ impl Measurable for FileMeasurer {
         );
         Ok(())
     }
-} 
+}

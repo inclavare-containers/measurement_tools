@@ -5,8 +5,7 @@ fn main() -> std::io::Result<()> {
     let includes = &["protos"];
 
     // Configure protobuf code generation
-    let protobuf_customized = ProtobufCustomize::default()
-        .gen_mod_rs(false);
+    let protobuf_customized = ProtobufCustomize::default().gen_mod_rs(false);
 
     Codegen::new()
         .out_dir("src/rpc_generated")
@@ -22,4 +21,4 @@ fn main() -> std::io::Result<()> {
         .expect("Failed to run ttrpc codegen");
 
     Ok(())
-} 
+}

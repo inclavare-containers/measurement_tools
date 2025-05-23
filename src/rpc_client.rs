@@ -1,7 +1,7 @@
 // src/rpc_client.rs
 use crate::error::{MeasurementError, Result};
-use crate::rpc_generated::attestation_agent_ttrpc::AttestationAgentServiceClient;
 use crate::rpc_generated::attestation_agent::ExtendRuntimeMeasurementRequest;
+use crate::rpc_generated::attestation_agent_ttrpc::AttestationAgentServiceClient;
 use log::{debug, info};
 use ttrpc::asynchronous::Client;
 
@@ -28,10 +28,7 @@ impl AAClient {
     ) -> Result<()> {
         debug!(
             "Extending runtime measurement: pcr_opt={:?}, domain={}, op={}, content={}",
-            pcr_index_opt,
-            domain,
-            operation,
-            content
+            pcr_index_opt, domain, operation, content
         );
         let mut req = ExtendRuntimeMeasurementRequest::new();
         req.Domain = domain.to_string();
@@ -41,7 +38,11 @@ impl AAClient {
             req.RegisterIndex = Some(pcr_index);
         }
 
-        match self.client.extend_runtime_measurement(default_ttrpc_context(), &req).await {
+        match self
+            .client
+            .extend_runtime_measurement(default_ttrpc_context(), &req)
+            .await
+        {
             Ok(_) => {
                 debug!("Successfully extended runtime measurement.");
                 Ok(())
@@ -56,7 +57,8 @@ impl AAClient {
 }
 
 fn default_ttrpc_context() -> ttrpc::context::Context {
-    let mut ctx = ttrpc::context::Context::default();
-    ctx.timeout_nano = 5_000_000_000; // 5 seconds timeout
-    ctx
-} 
+    ttrpc::context::Context {
+        timeout_nano: 5_000_000_000,
+        ..Default::default()
+    }
+}

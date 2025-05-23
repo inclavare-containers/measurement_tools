@@ -10,10 +10,10 @@ use crate::modules::{FileMeasurer, Measurable};
 use crate::rpc_client::AAClient;
 use anyhow::Result;
 use log::{error, info};
+use std::env;
 use std::path::PathBuf;
 use std::process::exit;
 use std::sync::Arc;
-use std::env;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -70,4 +70,4 @@ async fn main() -> Result<()> {
         error!("One or more measurements failed.");
         exit(1);
     }
-} 
+}

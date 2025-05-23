@@ -14,4 +14,4 @@ pub trait Measurable {
 
     /// Performs the measurement and sends results via the AAClient.
     async fn measure(&self, config: Arc<Config>, aa_client: Arc<AAClient>) -> Result<()>;
-} 
+}

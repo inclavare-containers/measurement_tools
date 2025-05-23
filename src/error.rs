@@ -22,4 +22,4 @@ pub enum MeasurementError {
     Other(#[from] anyhow::Error),
 }
 
-pub type Result<T> = std::result::Result<T, MeasurementError>; 
+pub type Result<T> = std::result::Result<T, MeasurementError>;
