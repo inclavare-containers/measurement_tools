@@ -10,9 +10,8 @@ domain = "file"
 operation = "measure"
 hash_algorithm = "sha256" # Options: sha256, sha384
 files = [
-  "/etc/hostname",
   "/usr/bin/attestation-agent",
-  "/etc/*.conf"
+  "/etc/trustiflux/*"
 ]
 
 # Future measurer configurations can be added here, e.g.:
