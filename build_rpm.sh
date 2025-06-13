@@ -99,7 +99,7 @@ prepare_sources() {
     # 复制源码文件（排除target目录和.git）
     log_info "复制源码文件到临时目录..."
     rsync -av --exclude='target' --exclude='.git' --exclude='*.rpm' \
-          --exclude='rpmbuild' "${ORIGINAL_DIR}/" "${temp_dir}/"
+          --exclude='rpmbuild' --exclude='vendor' "${ORIGINAL_DIR}/" "${temp_dir}/"
     
     # 创建vendor依赖
     log_info "创建vendor依赖..."
@@ -107,7 +107,19 @@ prepare_sources() {
         cd "${temp_dir}"
         cargo vendor --locked
         tar czf "${BUILD_DIR}/SOURCES/${vendor_tarball}" vendor
+        rm -rf vendor  # 删除vendor目录，确保它不会被包含在源码tarball中
     )
+    
+    # 创建.cargo/config.toml
+    log_info "创建.cargo/config.toml..."
+    mkdir -p "${temp_dir}/.cargo"
+    cat > "${temp_dir}/.cargo/config.toml" << EOF
+[source.crates-io]
+replace-with = "vendored-sources"
+
+[source.vendored-sources]
+directory = "vendor"
+EOF
     
     # 创建tar包（在临时目录的父目录中执行）
     log_info "创建源码包..."
