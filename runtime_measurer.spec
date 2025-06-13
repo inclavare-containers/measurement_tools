@@ -1,8 +1,9 @@
+%define alinux_release 1
 %global config_dir /etc/runtime_measurer
 
 Name:           runtime_measurer
 Version:        0.1.0
-Release:        1%{?dist}
+Release:        %{alinux_release}%{?dist}
 Summary:        Runtime measurement tool for confidential computing environments
 Group:          Applications/System
 BuildArch:      x86_64

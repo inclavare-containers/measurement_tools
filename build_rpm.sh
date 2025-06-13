@@ -10,6 +10,7 @@ VERSION=${1:-"0.1.0"}
 PACKAGE_NAME="runtime_measurer"
 BUILD_DIR="$HOME/rpmbuild"
 SPEC_FILE="${PACKAGE_NAME}.spec"
+COPY_SOURCES=false
 
 # 保存当前工作目录
 ORIGINAL_DIR="$(pwd)"
@@ -185,6 +186,29 @@ cleanup_on_error() {
 # 设置错误处理
 trap cleanup_on_error ERR
 
+# 复制文件到当前目录
+copy_to_current_dir() {
+    log_info "复制文件到当前目录..."
+    
+    local tarball="${PACKAGE_NAME}-${VERSION}.tar.gz"
+    
+    # 复制源码包
+    if [ -f "${BUILD_DIR}/SOURCES/${tarball}" ]; then
+        cp "${BUILD_DIR}/SOURCES/${tarball}" "${ORIGINAL_DIR}/"
+        log_info "已复制源码包到: ${ORIGINAL_DIR}/${tarball}"
+    else
+        log_error "找不到源码包: ${BUILD_DIR}/SOURCES/${tarball}"
+    fi
+    
+    # 复制spec文件
+    if [ -f "${BUILD_DIR}/SPECS/${SPEC_FILE}" ]; then
+        cp "${BUILD_DIR}/SPECS/${SPEC_FILE}" "${ORIGINAL_DIR}/"
+        log_info "已复制spec文件到: ${ORIGINAL_DIR}/${SPEC_FILE}"
+    else
+        log_error "找不到spec文件: ${BUILD_DIR}/SPECS/${SPEC_FILE}"
+    fi
+}
+
 # 显示帮助信息
 show_help() {
     cat << EOF
@@ -197,12 +221,14 @@ RPM构建脚本 for ${PACKAGE_NAME}
     -h, --help      显示此帮助信息
     -c, --clean     清理构建目录
     --clean-all     清理所有构建文件
+    --copy-sources  将源码包和spec文件复制到当前目录
 
 示例:
     $0                  # 使用默认版本 ${VERSION}
     $0 0.2.0           # 使用指定版本
     $0 --clean         # 清理构建目录
     $0 --clean-all     # 清理所有构建文件
+    $0 --copy-sources  # 复制源码包和spec文件到当前目录
 
 当前工作目录: ${ORIGINAL_DIR}
 构建目录: ${BUILD_DIR}
@@ -225,6 +251,10 @@ main() {
             cleanup all
             exit 0
             ;;
+        --copy-sources)
+            COPY_SOURCES=true
+            shift
+            ;;
         -*)
             log_error "未知选项: $1"
             show_help
@@ -240,6 +270,12 @@ main() {
     setup_build_env
     prepare_sources
     copy_spec
+    
+    if [ "$COPY_SOURCES" = true ]; then
+        copy_to_current_dir
+        exit 0
+    fi
+    
     build_rpm
     show_results
     
