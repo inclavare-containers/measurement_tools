@@ -1,4 +1,4 @@
-# Example configuration for Runtime Measurer
+# Example configuration for measurement tool
 
 # ttrpc endpoint for Attestation Agent
 attestation_agent_socket = "unix:///run/confidential-containers/attestation-agent/attestation-agent.sock"

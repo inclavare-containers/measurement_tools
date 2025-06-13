@@ -1,7 +1,7 @@
 %define alinux_release 1
-%global config_dir /etc/runtime_measurer
+%global config_dir /etc/measurement_tool
 
-Name:           runtime_measurer
+Name:           measurement_tool
 Version:        0.1.0
 Release:        %{alinux_release}%{?dist}
 Summary:        Runtime measurement tool for confidential computing environments
@@ -26,13 +26,13 @@ Requires:       attestation-agent
 %global __requires_exclude_from ^%{_bindir}/.*$
 
 %description
-Runtime Measurer is a flexible runtime measurement tool for confidential 
+measurement tool is a flexible runtime measurement tool for confidential 
 computing environments that measures various system resources and communicates 
 with Attestation Agents via ttrpc protocol. It supports file measurements, 
 process measurements, and container image measurements.
 
 %prep
-%autosetup -n runtime_measurer-%{version}
+%autosetup -n measurement_tool-%{version}
 
 %build
 export CARGO_HOME=%{_builddir}/.cargo
@@ -42,27 +42,27 @@ cargo build --release --locked
 
 %install
 mkdir -p %{buildroot}%{_bindir}
-mkdir -p %{buildroot}%{_sysconfdir}/runtime_measurer
+mkdir -p %{buildroot}%{_sysconfdir}/measurement_tool
 mkdir -p %{buildroot}%{_unitdir}
 
-install -m 755 target/release/runtime_measurer %{buildroot}%{_bindir}/runtime_measurer
-install -m 644 config.example.toml %{buildroot}%{_sysconfdir}/runtime_measurer/config.toml
-install -m 644 runtime_measurer.service %{buildroot}%{_unitdir}/runtime_measurer.service
+install -m 755 target/release/measurement_tool %{buildroot}%{_bindir}/measurement_tool
+install -m 644 config.example.toml %{buildroot}%{_sysconfdir}/measurement_tool/config.toml
+install -m 644 measurement_tool.service %{buildroot}%{_unitdir}/measurement_tool.service
 
 %files
 %doc README.md
-%{_bindir}/runtime_measurer
-%config(noreplace) %{_sysconfdir}/runtime_measurer/config.toml
-%{_unitdir}/runtime_measurer.service
+%{_bindir}/measurement_tool
+%config(noreplace) %{_sysconfdir}/measurement_tool/config.toml
+%{_unitdir}/measurement_tool.service
 
 %post
-%systemd_post runtime_measurer.service
+%systemd_post measurement_tool.service
 
 %preun
-%systemd_preun runtime_measurer.service
+%systemd_preun measurement_tool.service
 
 %postun
-%systemd_postun_with_restart runtime_measurer.service
+%systemd_postun_with_restart measurement_tool.service
 
 %changelog
 * Fri May 30 2025 Weidong Sun <sunweidong@linux.alibaba.com> - 0.1.0-1

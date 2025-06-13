@@ -1,10 +1,10 @@
-# Runtime Measurer
+# measurement tool
 
 A flexible runtime measurement tool for confidential computing environments that measures various system resources and communicates with Attestation Agents via ttrpc protocol.
 
 ## Overview
 
-Runtime Measurer is a Rust-based tool designed to perform runtime measurements of system resources (files, processes, container images, etc.) in confidential computing environments. It sends measurement results to an Attestation Agent through a secure ttrpc connection, enabling verification and attestation of system state.
+measurement tool is a Rust-based tool designed to perform runtime measurements of system resources (files, processes, container images, etc.) in confidential computing environments. It sends measurement results to an Attestation Agent through a secure ttrpc connection, enabling verification and attestation of system state.
 
 ## Currently Supported Measurers
 
@@ -23,7 +23,7 @@ cd measurement_tools
 cargo build --release
 ```
 
-The compiled binary will be available at `target/release/runtime_measurer`.
+The compiled binary will be available at `target/release/measurement_tool`.
 
 ## Configuration
 
@@ -68,10 +68,10 @@ files = [
 
 ```bash
 # Use default config.toml in current directory
-./runtime_measurer
+./measurement_tool
 
 # Use custom configuration file
-./runtime_measurer /path/to/custom/config.toml
+./measurement_tool /path/to/custom/config.toml
 ```
 
 ### Logging
@@ -80,13 +80,13 @@ Control logging output with the `RUST_LOG` environment variable:
 
 ```bash
 # Info level logging (default)
-RUST_LOG=info ./runtime_measurer
+RUST_LOG=info ./measurement_tool
 
 # Debug level logging
-RUST_LOG=debug ./runtime_measurer
+RUST_LOG=debug ./measurement_tool
 
 # Warning level only
-RUST_LOG=warn ./runtime_measurer
+RUST_LOG=warn ./measurement_tool
 ```
 
 ## Adding New Measurers

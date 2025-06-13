@@ -1,13 +1,13 @@
 #!/bin/bash
 
-# RPM构建脚本 for runtime_measurer
+# RPM构建脚本 for measurement_tool
 # 使用方法: ./build_rpm.sh [version]
 
 set -e
 
 # 默认版本号
 VERSION=${1:-"0.1.0"}
-PACKAGE_NAME="runtime_measurer"
+PACKAGE_NAME="measurement_tool"
 BUILD_DIR="$HOME/rpmbuild"
 SPEC_FILE="${PACKAGE_NAME}.spec"
 COPY_SOURCES=false

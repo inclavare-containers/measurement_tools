@@ -23,7 +23,7 @@ async fn main() -> Result<()> {
     let config_path_str = env::args().nth(1);
     let config_path = config_path_str.as_ref().map(PathBuf::from);
 
-    info!("Runtime Measurer starting...");
+    info!("measurement tool starting...");
 
     let config = match Config::load(config_path.as_deref()) {
         Ok(cfg) => Arc::new(cfg),
