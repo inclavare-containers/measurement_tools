@@ -11,9 +11,10 @@ BuildArch:      x86_64
 License:        Apache-2.0
 URL:            https://github.com/inclavare-containers/measurement_tools
 Source0:        %{name}-%{version}.tar.gz
+Source1:        vendor.tar.gz
 
-BuildRequires:  rust >= 1.70
-BuildRequires:  cargo
+BuildRequires:  rust = 1.75.0
+BuildRequires:  cargo = 1.75.0
 BuildRequires:  gcc
 BuildRequires:  protobuf-compiler
 BuildRequires:  protobuf-devel
@@ -33,12 +34,14 @@ process measurements, and container image measurements.
 
 %prep
 %autosetup -n measurement_tool-%{version}
+tar xf %{SOURCE1} -C %{_builddir}/measurement_tool-%{version}
 
 %build
 export CARGO_HOME=%{_builddir}/.cargo
 export RUSTFLAGS="-C opt-level=3 -C target-cpu=native"
+export CARGO_VENDOR_DIR=%{_builddir}/measurement_tool-%{version}/vendor
 
-cargo build --release --locked
+cargo build --release --locked --offline
 
 %install
 mkdir -p %{buildroot}%{_bindir}

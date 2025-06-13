@@ -6,7 +6,7 @@
 set -e
 
 # 默认版本号
-VERSION=${1:-"0.1.0"}
+VERSION="0.1.0"
 PACKAGE_NAME="measurement_tool"
 BUILD_DIR="$HOME/rpmbuild"
 SPEC_FILE="${PACKAGE_NAME}.spec"
@@ -87,10 +87,11 @@ prepare_sources() {
     
     local source_dir="${PACKAGE_NAME}-${VERSION}"
     local tarball="${PACKAGE_NAME}-${VERSION}.tar.gz"
+    local vendor_tarball="vendor.tar.gz"
     local temp_dir="/tmp/${source_dir}"
     
     # 清理之前的构建
-    rm -rf "${temp_dir}" "${BUILD_DIR}/SOURCES/${tarball}"
+    rm -rf "${temp_dir}" "${BUILD_DIR}/SOURCES/${tarball}" "${BUILD_DIR}/SOURCES/${vendor_tarball}"
     
     # 创建源码目录
     mkdir -p "${temp_dir}"
@@ -99,6 +100,14 @@ prepare_sources() {
     log_info "复制源码文件到临时目录..."
     rsync -av --exclude='target' --exclude='.git' --exclude='*.rpm' \
           --exclude='rpmbuild' "${ORIGINAL_DIR}/" "${temp_dir}/"
+    
+    # 创建vendor依赖
+    log_info "创建vendor依赖..."
+    (
+        cd "${temp_dir}"
+        cargo vendor --locked
+        tar czf "${BUILD_DIR}/SOURCES/${vendor_tarball}" vendor
+    )
     
     # 创建tar包（在临时目录的父目录中执行）
     log_info "创建源码包..."
@@ -111,6 +120,7 @@ prepare_sources() {
     rm -rf "${temp_dir}"
     
     log_info "源码包准备完成: ${BUILD_DIR}/SOURCES/${tarball}"
+    log_info "vendor依赖包准备完成: ${BUILD_DIR}/SOURCES/${vendor_tarball}"
 }
 
 # 复制spec文件
@@ -191,6 +201,7 @@ copy_to_current_dir() {
     log_info "复制文件到当前目录..."
     
     local tarball="${PACKAGE_NAME}-${VERSION}.tar.gz"
+    local vendor_tarball="vendor.tar.gz"
     
     # 复制源码包
     if [ -f "${BUILD_DIR}/SOURCES/${tarball}" ]; then
@@ -198,6 +209,14 @@ copy_to_current_dir() {
         log_info "已复制源码包到: ${ORIGINAL_DIR}/${tarball}"
     else
         log_error "找不到源码包: ${BUILD_DIR}/SOURCES/${tarball}"
+    fi
+    
+    # 复制vendor依赖包
+    if [ -f "${BUILD_DIR}/SOURCES/${vendor_tarball}" ]; then
+        cp "${BUILD_DIR}/SOURCES/${vendor_tarball}" "${ORIGINAL_DIR}/"
+        log_info "已复制vendor依赖包到: ${ORIGINAL_DIR}/${vendor_tarball}"
+    else
+        log_error "找不到vendor依赖包: ${BUILD_DIR}/SOURCES/${vendor_tarball}"
     fi
     
     # 复制spec文件
@@ -238,30 +257,44 @@ EOF
 
 # 主函数
 main() {
-    case "$1" in
-        -h|--help)
-            show_help
-            exit 0
-            ;;
-        -c|--clean)
-            cleanup
-            exit 0
-            ;;
-        --clean-all)
-            cleanup all
-            exit 0
-            ;;
-        --copy-sources)
-            COPY_SOURCES=true
-            shift
-            ;;
-        -*)
-            log_error "未知选项: $1"
-            show_help
-            exit 1
-            ;;
-    esac
-    
+    # 处理命令行参数
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            -h|--help)
+                show_help
+                exit 0
+                ;;
+            -c|--clean)
+                cleanup
+                exit 0
+                ;;
+            --clean-all)
+                cleanup all
+                exit 0
+                ;;
+            --copy-sources)
+                COPY_SOURCES=true
+                shift
+                ;;
+            -*)
+                log_error "未知选项: $1"
+                show_help
+                exit 1
+                ;;
+            *)
+                # 如果不是选项，则认为是版本号
+                if [[ "$1" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+                    VERSION="$1"
+                else
+                    log_error "无效的版本号格式: $1"
+                    show_help
+                    exit 1
+                fi
+                shift
+                ;;
+        esac
+    done
+
     log_info "开始构建 ${PACKAGE_NAME} RPM包 (版本: ${VERSION})"
     log_info "当前工作目录: ${ORIGINAL_DIR}"
     log_info "构建目录: ${BUILD_DIR}"
