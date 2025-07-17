@@ -6,6 +6,7 @@ Requires=attestation-agent.service
 
 [Service]
 Type=oneshot
+ExecStartPre=/bin/sleep 5
 ExecStart=/usr/bin/measurement_tool /etc/measurement_tool/config.toml
 # Logging
 StandardOutput=journal

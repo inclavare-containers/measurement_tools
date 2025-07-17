@@ -1,8 +1,8 @@
-%define alinux_release 2
+%define alinux_release 1
 %global config_dir /etc/measurement_tool
 
 Name:           measurement_tool
-Version:        0.1.0
+Version:        0.2.0
 Release:        %{alinux_release}%{?dist}
 Summary:        Runtime measurement tool for confidential computing environments
 Group:          Applications/System
@@ -75,6 +75,9 @@ if [ $1 == 0 ]; then #uninstall
 fi
 
 %changelog
+* Thu Jul 17 2025 Weidong Sun <sunweidong@linux.alibaba.com> - 0.2.0-1
+- Update eventlog format
+
 * Tue Jun 24 2025 Weidong Sun <sunweidong@linux.alibaba.com> - 0.1.0-2
 - Remove rust version restriction
 

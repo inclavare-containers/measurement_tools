@@ -20,10 +20,6 @@ pub struct FileMeasurementConfig {
     pub enable: bool,
     #[serde(default = "default_pcr_index")]
     pub pcr_index: u32,
-    #[serde(default = "default_file_domain")]
-    pub domain: String,
-    #[serde(default = "default_file_operation")]
-    pub operation: String,
     #[serde(default = "default_hash_algorithm")]
     pub hash_algorithm: String, // e.g., "sha256", "sha384"
     #[serde(default)]
@@ -38,14 +34,6 @@ fn default_pcr_index() -> u32 {
     18 // Default PCR for this tool, distinct from AA's internal one
 }
 
-fn default_file_domain() -> String {
-    "runtime_file".to_string()
-}
-
-fn default_file_operation() -> String {
-    "measure".to_string()
-}
-
 fn default_hash_algorithm() -> String {
     "sha256".to_string()
 }
@@ -55,8 +43,6 @@ impl Default for FileMeasurementConfig {
         Self {
             enable: default_false(),
             pcr_index: default_pcr_index(),
-            domain: default_file_domain(),
-            operation: default_file_operation(),
             hash_algorithm: default_hash_algorithm(),
             files: Vec::new(),
         }

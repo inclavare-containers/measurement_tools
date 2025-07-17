@@ -6,11 +6,10 @@ attestation_agent_socket = "unix:///run/confidential-containers/attestation-agen
 [file_measurement]
 enable = true
 pcr_index = 16 # Use a different PCR from AA's internal file measurement if needed
-domain = "file"
-operation = "measure"
 hash_algorithm = "sha256" # Options: sha256, sha384
 files = [
   "/usr/bin/attestation-agent",
+  "/usr/local/bin/attestation-agent",
   "/etc/trustiflux/*"
 ]
 

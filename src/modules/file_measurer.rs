@@ -13,6 +13,8 @@ use std::sync::Arc;
 
 pub struct FileMeasurer;
 
+const DOMAIN: &str = "file";
+
 impl FileMeasurer {
     pub fn new() -> Self {
         Self
@@ -45,19 +47,17 @@ impl FileMeasurer {
                     }
                 };
 
-                let content_description = format!("{}:{}", file_path, file_hash_hex);
-
                 debug!(
                     "Extending measurement for file: {}, PCR: {}, Domain: {}, Operation: {}, Content: {}",
-                    file_path, fm_config.pcr_index, fm_config.domain, fm_config.operation, content_description
+                    file_path, fm_config.pcr_index, DOMAIN, file_path, file_hash_hex
                 );
 
                 aa_client
                     .extend_runtime_measurement(
                         Some(fm_config.pcr_index as u64),
-                        &fm_config.domain,
-                        &fm_config.operation,
-                        &content_description,
+                        DOMAIN,
+                        file_path,
+                        &file_hash_hex,
                     )
                     .await?;
                 Ok(())
@@ -90,8 +90,8 @@ impl Measurable for FileMeasurer {
         }
 
         info!(
-            "Starting file measurement with PCR index: {}, Domain: {}, Operation: {}, Hash Alg: {}",
-            fm_config.pcr_index, fm_config.domain, fm_config.operation, fm_config.hash_algorithm
+            "Starting file measurement with PCR index: {}, Domain: {}, Hash Alg: {}",
+            fm_config.pcr_index, DOMAIN, fm_config.hash_algorithm
         );
 
         let mut measured_files = HashSet::new();
