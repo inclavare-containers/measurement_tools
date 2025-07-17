@@ -1,4 +1,4 @@
-%define alinux_release 1
+%define alinux_release 2
 %global config_dir /etc/measurement_tool
 
 Name:           measurement_tool
@@ -6,15 +6,15 @@ Version:        0.1.0
 Release:        %{alinux_release}%{?dist}
 Summary:        Runtime measurement tool for confidential computing environments
 Group:          Applications/System
-BuildArch:      x86_64
+ExclusiveArch:  x86_64
 
 License:        Apache-2.0
 URL:            https://github.com/inclavare-containers/measurement_tools
 Source0:        %{name}-%{version}.tar.gz
 Source1:        vendor.tar.gz
 
-BuildRequires:  rust = 1.75.0
-BuildRequires:  cargo = 1.75.0
+BuildRequires:  rust
+BuildRequires:  cargo
 BuildRequires:  gcc
 BuildRequires:  protobuf-compiler
 BuildRequires:  protobuf-devel
@@ -45,29 +45,39 @@ cargo build --release --locked --offline
 
 %install
 mkdir -p %{buildroot}%{_bindir}
-mkdir -p %{buildroot}%{_sysconfdir}/measurement_tool
-mkdir -p %{buildroot}%{_unitdir}
+mkdir -p %{buildroot}%{config_dir}
+mkdir -p %{buildroot}%{_prefix}/lib/systemd/system
 
 install -m 755 target/release/measurement_tool %{buildroot}%{_bindir}/measurement_tool
-install -m 644 config.example.toml %{buildroot}%{_sysconfdir}/measurement_tool/config.toml
-install -m 644 measurement_tool.service %{buildroot}%{_unitdir}/measurement_tool.service
+install -m 644 config.example.toml %{buildroot}%{config_dir}/config.toml
+install -m 644 measurement_tool.service %{buildroot}%{_prefix}/lib/systemd/system/measurement_tool.service
 
 %files
 %doc README.md
 %{_bindir}/measurement_tool
-%config(noreplace) %{_sysconfdir}/measurement_tool/config.toml
-%{_unitdir}/measurement_tool.service
+%config(noreplace) %{config_dir}/config.toml
+%{_prefix}/lib/systemd/system/measurement_tool.service
 
 %post
-%systemd_post measurement_tool.service
+systemctl daemon-reload
 
 %preun
-%systemd_preun measurement_tool.service
+if [ $1 == 0 ]; then #uninstall
+  systemctl unmask measurement_tool
+  systemctl stop measurement_tool
+  systemctl disable measurement_tool
+fi
 
 %postun
-%systemd_postun_with_restart measurement_tool.service
+if [ $1 == 0 ]; then #uninstall
+  systemctl daemon-reload
+  systemctl reset-failed
+fi
 
 %changelog
+* Tue Jun 24 2025 Weidong Sun <sunweidong@linux.alibaba.com> - 0.1.0-2
+- Remove rust version restriction
+
 * Fri May 30 2025 Weidong Sun <sunweidong@linux.alibaba.com> - 0.1.0-1
 - Initial package release
 - Runtime measurement tool for confidential computing
