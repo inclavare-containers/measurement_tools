@@ -5,13 +5,15 @@ Wants=network.target
 Requires=attestation-agent.service
 
 [Service]
-Type=oneshot
+Type=simple
 ExecStartPre=/bin/sleep 5
 ExecStart=/usr/bin/measurement_tool /etc/measurement_tool/config.toml
 # Logging
 StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=measurement_tool
+Restart=always
+RestartSec=2s
 
 [Install]
 WantedBy=multi-user.target 

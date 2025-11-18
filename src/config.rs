@@ -1,6 +1,5 @@
 // src/config.rs
 use anyhow::{Context, Result};
-use log::info;
 use serde::Deserialize;
 use std::fs;
 use std::path::Path;
@@ -52,7 +51,6 @@ impl Default for FileMeasurementConfig {
 impl Config {
     pub fn load(config_path: Option<&Path>) -> Result<Self> {
         let path = config_path.unwrap_or_else(|| Path::new("runtime-measurer-config.toml"));
-        info!("Loading configuration from: {:?}", path);
         let content = fs::read_to_string(path)
             .with_context(|| format!("Failed to read configuration file: {:?}", path))?;
         let config: Config = toml::from_str(&content)
