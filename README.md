@@ -12,6 +12,7 @@ measurement tool is a Rust-based tool designed to perform runtime measurements o
   - Supports SHA256 and SHA384 algorithms
   - Configurable PCR index for measurements
   - Glob pattern support for flexible file selection
+  - Runtime: watches config for changes to `file_measurement.files` and measures only newly added patterns
 
 ## Installation
 
@@ -64,7 +65,7 @@ files = [
 
 ## Usage
 
-### Basic Usage
+### Basic Usage (Daemon)
 
 ```bash
 # Use default config.toml in current directory
@@ -88,6 +89,11 @@ RUST_LOG=debug ./measurement_tool
 # Warning level only
 RUST_LOG=warn ./measurement_tool
 ```
+
+## Service
+
+The tool is designed to run as a long-lived daemon. On startup it performs a one-time measurement run (equivalent to the previous oneshot behavior), then:
+- Watches the configuration file for updates and measures any newly added patterns.
 
 ## Adding New Measurers
 

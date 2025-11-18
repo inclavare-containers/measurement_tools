@@ -6,7 +6,7 @@ mod rpc_client;
 mod rpc_generated; // Module for ttrpc generated code
 
 use crate::config::Config;
-use crate::modules::{FileMeasurer, Measurable};
+use crate::modules::{ConfigWatcher, FileMeasurer, Measurable};
 use crate::rpc_client::AAClient;
 use anyhow::Result;
 use log::{error, info};
@@ -14,6 +14,7 @@ use std::env;
 use std::path::PathBuf;
 use std::process::exit;
 use std::sync::Arc;
+use tokio::sync::RwLock;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -22,6 +23,11 @@ async fn main() -> Result<()> {
 
     let config_path_str = env::args().nth(1);
     let config_path = config_path_str.as_ref().map(PathBuf::from);
+    if let Some(ref path) = config_path {
+        info!("Loading configuration from: {:?}", path);
+    } else {
+        info!("Use default configuration");
+    }
 
     info!("measurement tool starting...");
 
@@ -41,6 +47,9 @@ async fn main() -> Result<()> {
         }
     };
 
+    // Shared config for runtime watchers
+    let shared_config = Arc::new(RwLock::new((*config).clone()));
+
     // --- Register Measurers ---
     // Add new measurers to this vector as they are implemented.
     let measurers: Vec<Box<dyn Measurable + Send + Sync>> = vec![
@@ -49,25 +58,60 @@ async fn main() -> Result<()> {
     ];
     // --------------------------
 
-    let mut success = true;
-
-    for measurer in measurers {
-        if measurer.is_enabled(config.clone()) {
-            info!("Running measurer: {}", measurer.name());
-            if let Err(e) = measurer.measure(config.clone(), aa_client.clone()).await {
-                error!("Error during {} execution: {}", measurer.name(), e);
-                success = false;
+    // Initial one-shot run
+    {
+        let config_snapshot = {
+            let guard = shared_config.read().await;
+            guard.clone()
+        };
+        let arc_snapshot = Arc::new(config_snapshot);
+        let mut success = true;
+        for measurer in measurers {
+            if measurer.is_enabled(arc_snapshot.clone()) {
+                info!("Running measurer: {}", measurer.name());
+                if let Err(e) = measurer
+                    .measure(arc_snapshot.clone(), aa_client.clone())
+                    .await
+                {
+                    error!("Error during {} execution: {}", measurer.name(), e);
+                    success = false;
+                }
+            } else {
+                info!("Measurer {} is disabled. Skipping.", measurer.name());
             }
+        }
+        if !success {
+            error!("One or more measurements failed during initial run.");
         } else {
-            info!("Measurer {} is disabled. Skipping.", measurer.name());
+            info!("Initial measurement run completed successfully.");
         }
     }
 
-    if success {
-        info!("All enabled measurements completed successfully.");
-        Ok(())
-    } else {
-        error!("One or more measurements failed.");
-        exit(1);
+    // Determine effective config path for watcher
+    let effective_config_path =
+        config_path.unwrap_or_else(|| PathBuf::from("runtime-measurer-config.toml"));
+
+    // Spawn config watchers
+    let watchers: Vec<Box<dyn ConfigWatcher + Send + Sync>> = vec![Box::new(
+        crate::modules::file_config_watcher::FileConfigWatcher::new(),
+    )];
+    for watcher in watchers {
+        if watcher.is_enabled(Arc::new(shared_config.read().await.clone())) {
+            let cfg = shared_config.clone();
+            let aa = aa_client.clone();
+            let path = effective_config_path.clone();
+            tokio::spawn(async move {
+                if let Err(e) = watcher.watch(path, cfg, aa).await {
+                    error!("Config watcher exited with error: {}", e);
+                }
+            });
+        } else {
+            info!("Watcher {} is disabled. Skipping.", watcher.name());
+        }
     }
+
+    // Keep running as a daemon
+    std::future::pending::<()>().await;
+    #[allow(unreachable_code)]
+    Ok(())
 }

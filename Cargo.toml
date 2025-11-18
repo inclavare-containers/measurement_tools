@@ -20,6 +20,8 @@ async-trait = "0.1.83"
 ttrpc = { version = "0.8.4", features = ["async"] }
 protobuf = "3.5.1"
 thiserror = "2.0"
+notify = "6.1.1"
+regex = "1.11.1"
 
 [build-dependencies]
 ttrpc-codegen = "0.5.0" 
