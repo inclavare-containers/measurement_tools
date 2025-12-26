@@ -21,6 +21,12 @@ pub enum MeasurementError {
     #[error("Command execution failed: {0}")]
     CommandExecution(String),
 
+    #[error("HTTP request failed: {0}")]
+    Http(String),
+
+    #[error("Configuration error: {0}")]
+    Config(String),
+
     #[error("Attestation agent client error: {0}")]
     AttestationAgentClient(#[from] ttrpc::Error),
 

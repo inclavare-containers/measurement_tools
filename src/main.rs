@@ -42,7 +42,7 @@ async fn main() -> Result<()> {
         }
     };
 
-    let aa_client = match AAClient::new(&config.attestation_agent_socket).await {
+    let aa_client = match AAClient::from_config(&config).await {
         Ok(client) => Arc::new(client),
         Err(e) => {
             error!("Failed to connect to Attestation Agent: {}", e);
@@ -89,6 +89,11 @@ async fn main() -> Result<()> {
         } else {
             info!("Initial measurement run completed successfully.");
         }
+    }
+
+    if config.one_shot {
+        info!("One-shot mode enabled. Exiting after initial measurement.");
+        return Ok(());
     }
 
     // Determine effective config path for watcher
