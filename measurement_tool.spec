@@ -1,4 +1,4 @@
-%define alinux_release 1
+%define alinux_release 2
 %global config_dir /etc/measurement_tool
 
 Name:           measurement_tool
@@ -38,17 +38,16 @@ tar xf %{SOURCE1} -C %{_builddir}/measurement_tool-%{version}
 
 %build
 export CARGO_HOME=%{_builddir}/.cargo
-export RUSTFLAGS="-C opt-level=3 -C target-cpu=native"
 export CARGO_VENDOR_DIR=%{_builddir}/measurement_tool-%{version}/vendor
 
-cargo build --release --locked --offline
+cargo build --release --locked --offline --target x86_64-unknown-linux-gnu
 
 %install
 mkdir -p %{buildroot}%{_bindir}
 mkdir -p %{buildroot}%{config_dir}
 mkdir -p %{buildroot}%{_prefix}/lib/systemd/system
 
-install -m 755 target/release/measurement_tool %{buildroot}%{_bindir}/measurement_tool
+install -m 755 target/x86_64-unknown-linux-gnu/release/measurement_tool %{buildroot}%{_bindir}/measurement_tool
 install -m 644 config.example.toml %{buildroot}%{config_dir}/config.toml
 install -m 644 measurement_tool.service %{buildroot}%{_prefix}/lib/systemd/system/measurement_tool.service
 
@@ -75,6 +74,9 @@ if [ $1 == 0 ]; then #uninstall
 fi
 
 %changelog
+* Fri Dec 26 2025 Weidong Sun <sunweidong@linux.alibaba.com> - 0.2.0-2
+- Support Hygon arch
+
 * Thu Jul 17 2025 Weidong Sun <sunweidong@linux.alibaba.com> - 0.2.0-1
 - Update eventlog format
 
