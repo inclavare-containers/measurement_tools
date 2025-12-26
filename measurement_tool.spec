@@ -38,7 +38,10 @@ tar xf %{SOURCE1} -C %{_builddir}/measurement_tool-%{version}
 
 %build
 export CARGO_HOME=%{_builddir}/.cargo
-export RUSTFLAGS="-C opt-level=3 -C target-cpu=native"
+# NOTE:
+# - `-C target-cpu=native` 会把构建机的 CPU 指令集特性固化进产物，换机器/换虚拟化环境可能触发 SIGILL。
+# - 这里使用更通用的 x86-64 baseline，确保在更广泛的 x86_64 机器上可运行。
+export RUSTFLAGS="-C opt-level=3 -C target-cpu=x86-64"
 export CARGO_VENDOR_DIR=%{_builddir}/measurement_tool-%{version}/vendor
 
 cargo build --release --locked --offline
