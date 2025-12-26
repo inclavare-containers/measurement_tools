@@ -1,7 +1,16 @@
 # Example configuration for measurement tool
 
-# ttrpc endpoint for Attestation Agent
+# How to send measurements: "unix_socket" (ttrpc) or "http_api"
+aa_channel = "unix_socket"
+
+# Run once then exit (true) or run as daemon with config watcher (false)
+one_shot = false
+
+# ttrpc endpoint for Attestation Agent (used when measurement_channel = "unix_socket")
 attestation_agent_socket = "unix:///run/confidential-containers/attestation-agent/attestation-agent.sock"
+
+# trustiflux API endpoint (used when measurement_channel = "http_api")
+# trustiflux_api_endpoint = "http://127.0.0.1:8006"
 
 [file_measurement]
 enable = true
@@ -12,6 +21,17 @@ files = [
   "/usr/local/bin/attestation-agent",
   "/etc/trustiflux/*"
 ]
+
+[model_dir_measurement]
+enable = true
+# Optional PCR index used when extending runtime measurement; set to a number
+# when you want to bind the measurement to a specific PCR. Leave unset to let
+# AA decide.
+# pcr_index = 22
+# Path to the cryptpilot binary (defaults to "cryptpilot" in $PATH)
+# cryptpilot_binary = "/usr/local/bin/cryptpilot"
+# path to target directories
+directories = []
 
 # Future measurer configurations can be added here, e.g.:
 # [process_measurement]

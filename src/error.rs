@@ -15,6 +15,18 @@ pub enum MeasurementError {
     #[error("Unsupported hash algorithm: {0}")]
     UnsupportedHashAlgorithm(String),
 
+    #[error("Invalid directory for measurement: {0}")]
+    InvalidDirectory(String),
+
+    #[error("Command execution failed: {0}")]
+    CommandExecution(String),
+
+    #[error("HTTP request failed: {0}")]
+    Http(String),
+
+    #[error("Configuration error: {0}")]
+    Config(String),
+
     #[error("Attestation agent client error: {0}")]
     AttestationAgentClient(#[from] ttrpc::Error),
 

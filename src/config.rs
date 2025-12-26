@@ -1,15 +1,30 @@
 // src/config.rs
 use anyhow::{Context, Result};
-use log::info;
 use serde::Deserialize;
 use std::fs;
 use std::path::Path;
 
+#[derive(Debug, Deserialize, Clone, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum MeasurementChannel {
+    UnixSocket,
+    HttpApi,
+}
+
 #[derive(Debug, Deserialize, Clone)]
 pub struct Config {
+    #[serde(default = "default_false")]
+    pub one_shot: bool,
+    #[serde(default = "default_attestation_agent_socket")]
     pub attestation_agent_socket: String,
     #[serde(default)]
+    pub trustiflux_api_endpoint: Option<String>,
+    #[serde(default = "default_aa_channel")]
+    pub aa_channel: MeasurementChannel,
+    #[serde(default)]
     pub file_measurement: FileMeasurementConfig,
+    #[serde(default)]
+    pub model_dir_measurement: ModelDirMeasurementConfig,
     // Add other measurement configs here as they are implemented
     // pub process_measurement: ProcessMeasurementConfig,
 }
@@ -26,8 +41,28 @@ pub struct FileMeasurementConfig {
     pub files: Vec<String>,
 }
 
+#[derive(Debug, Deserialize, Clone)]
+pub struct ModelDirMeasurementConfig {
+    #[serde(default = "default_false")]
+    pub enable: bool,
+    #[serde(default)]
+    pub pcr_index: Option<u32>,
+    #[serde(default = "default_cryptpilot_binary")]
+    pub cryptpilot_binary: String,
+    #[serde(default)]
+    pub directories: Vec<String>,
+}
+
 fn default_false() -> bool {
     false
+}
+
+fn default_aa_channel() -> MeasurementChannel {
+    MeasurementChannel::UnixSocket
+}
+
+fn default_attestation_agent_socket() -> String {
+    "unix:///run/confidential-containers/attestation-agent/attestation-agent.sock".to_string()
 }
 
 fn default_pcr_index() -> u32 {
@@ -36,6 +71,10 @@ fn default_pcr_index() -> u32 {
 
 fn default_hash_algorithm() -> String {
     "sha256".to_string()
+}
+
+fn default_cryptpilot_binary() -> String {
+    "cryptpilot".to_string()
 }
 
 impl Default for FileMeasurementConfig {
@@ -49,10 +88,20 @@ impl Default for FileMeasurementConfig {
     }
 }
 
+impl Default for ModelDirMeasurementConfig {
+    fn default() -> Self {
+        Self {
+            enable: default_false(),
+            pcr_index: None,
+            cryptpilot_binary: default_cryptpilot_binary(),
+            directories: Vec::new(),
+        }
+    }
+}
+
 impl Config {
     pub fn load(config_path: Option<&Path>) -> Result<Self> {
         let path = config_path.unwrap_or_else(|| Path::new("runtime-measurer-config.toml"));
-        info!("Loading configuration from: {:?}", path);
         let content = fs::read_to_string(path)
             .with_context(|| format!("Failed to read configuration file: {:?}", path))?;
         let config: Config = toml::from_str(&content)

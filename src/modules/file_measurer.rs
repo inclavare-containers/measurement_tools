@@ -20,6 +20,40 @@ impl FileMeasurer {
         Self
     }
 
+    pub async fn measure_patterns(
+        &self,
+        patterns: &[String],
+        fm_config: &FileMeasurementConfig,
+        aa_client: Arc<AAClient>,
+    ) -> Result<()> {
+        let mut measured_files = HashSet::new();
+        for pattern in patterns {
+            match glob(pattern) {
+                Ok(entries) => {
+                    for entry in entries {
+                        if let Ok(path) = entry {
+                            if path.is_file() {
+                                let path_str = path.to_string_lossy().to_string();
+                                if measured_files.insert(path_str.clone()) {
+                                    self.measure_single_file(
+                                        &path_str,
+                                        fm_config,
+                                        aa_client.clone(),
+                                    )
+                                    .await?;
+                                }
+                            }
+                        }
+                    }
+                }
+                Err(e) => {
+                    warn!("Invalid glob pattern '{}': {}", pattern, e);
+                }
+            }
+        }
+        Ok(())
+    }
+
     async fn measure_single_file(
         &self,
         file_path: &str,
