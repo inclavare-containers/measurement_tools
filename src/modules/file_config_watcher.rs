@@ -5,9 +5,12 @@ use crate::modules::model_dir_measurer::ModelDirMeasurer;
 use crate::modules::{watcher::ConfigWatcher, FileMeasurer};
 use crate::rpc_client::AAClient;
 use async_trait::async_trait;
+use hex;
 use log::{debug, info, warn};
 use notify::{recommended_watcher, EventKind, RecursiveMode, Watcher};
+use sha2::{Digest, Sha256};
 use std::collections::HashSet;
+use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::time::Duration;
@@ -134,6 +137,26 @@ impl ConfigFileWatcher {
     }
 }
 
+const MAX_RELOAD_RETRIES: usize = 3;
+const RELOAD_RETRY_DELAY_MS: u64 = 200;
+
+fn load_config_with_hash(path: &Path) -> Result<(Config, String)> {
+    let content = fs::read_to_string(path).map_err(|e| {
+        MeasurementError::InvalidDirectory(format!(
+            "Failed to read config {:?}: {}",
+            path, e
+        ))
+    })?;
+    let cfg: Config = toml::from_str(&content).map_err(|e| {
+        MeasurementError::Config(format!(
+            "Failed to parse config {:?}: {}",
+            path, e
+        ))
+    })?;
+    let hash = hex::encode(Sha256::digest(content.as_bytes()));
+    Ok((cfg, hash))
+}
+
 #[async_trait]
 impl ConfigWatcher for ConfigFileWatcher {
     fn name(&self) -> &str {
@@ -185,6 +208,8 @@ impl ConfigWatcher for ConfigFileWatcher {
             }
         });
 
+        let mut last_config_hash: Option<String> = None;
+
         loop {
             if let Some(event) = rx.recv().await {
                 if !is_relevant_event(&event.kind) {
@@ -202,18 +227,49 @@ impl ConfigWatcher for ConfigFileWatcher {
                 sleep(Duration::from_millis(150)).await;
 
                 let old_config = { shared_config.read().await.clone() };
-                let new_config = match Config::load(Some(&config_path)) {
-                    Ok(cfg) => cfg,
-                    Err(e) => {
-                        warn!("Failed to reload config after change: {}", e);
+
+                let mut new_config: Option<Config> = None;
+                let mut new_hash: Option<String> = None;
+
+                for attempt in 1..=MAX_RELOAD_RETRIES {
+                    match load_config_with_hash(&config_path) {
+                        Ok((cfg, hash)) => {
+                            new_config = Some(cfg);
+                            new_hash = Some(hash);
+                            break;
+                        }
+                        Err(e) => {
+                            warn!(
+                                "Failed to reload config (attempt {}/{}): {}",
+                                attempt, MAX_RELOAD_RETRIES, e
+                            );
+                            if attempt < MAX_RELOAD_RETRIES {
+                                sleep(Duration::from_millis(RELOAD_RETRY_DELAY_MS)).await;
+                            }
+                        }
+                    }
+                }
+
+                let new_config = match new_config {
+                    Some(cfg) => cfg,
+                    None => {
+                        warn!("Giving up config reload after {} attempts.", MAX_RELOAD_RETRIES);
                         continue;
                     }
                 };
+
+                let new_hash = new_hash.unwrap_or_default();
+
+                if last_config_hash.as_ref() == Some(&new_hash) {
+                    debug!("Config content unchanged; skipping handlers.");
+                    continue;
+                }
 
                 {
                     let mut guard = shared_config.write().await;
                     *guard = new_config.clone();
                 }
+                last_config_hash = Some(new_hash);
 
                 for handler in &self.handlers {
                     if handler.is_enabled(&new_config) {
