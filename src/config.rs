@@ -4,9 +4,23 @@ use serde::Deserialize;
 use std::fs;
 use std::path::Path;
 
+#[derive(Debug, Deserialize, Clone, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum MeasurementChannel {
+    UnixSocket,
+    HttpApi,
+}
+
 #[derive(Debug, Deserialize, Clone)]
 pub struct Config {
+    #[serde(default = "default_false")]
+    pub one_shot: bool,
+    #[serde(default = "default_attestation_agent_socket")]
     pub attestation_agent_socket: String,
+    #[serde(default)]
+    pub trustiflux_api_endpoint: Option<String>,
+    #[serde(default = "default_aa_channel")]
+    pub aa_channel: MeasurementChannel,
     #[serde(default)]
     pub file_measurement: FileMeasurementConfig,
     #[serde(default)]
@@ -41,6 +55,14 @@ pub struct ModelDirMeasurementConfig {
 
 fn default_false() -> bool {
     false
+}
+
+fn default_aa_channel() -> MeasurementChannel {
+    MeasurementChannel::UnixSocket
+}
+
+fn default_attestation_agent_socket() -> String {
+    "unix:///run/confidential-containers/attestation-agent/attestation-agent.sock".to_string()
 }
 
 fn default_pcr_index() -> u32 {
