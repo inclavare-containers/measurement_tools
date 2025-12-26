@@ -6,7 +6,10 @@ mod rpc_client;
 mod rpc_generated; // Module for ttrpc generated code
 
 use crate::config::Config;
-use crate::modules::{ConfigWatcher, FileMeasurer, Measurable};
+use crate::modules::{
+    ConfigChangeHandler, ConfigFileWatcher, ConfigWatcher, FileMeasurementChangeHandler,
+    FileMeasurer, Measurable, ModelDirMeasurementChangeHandler, ModelDirMeasurer,
+};
 use crate::rpc_client::AAClient;
 use anyhow::Result;
 use log::{error, info};
@@ -54,6 +57,7 @@ async fn main() -> Result<()> {
     // Add new measurers to this vector as they are implemented.
     let measurers: Vec<Box<dyn Measurable + Send + Sync>> = vec![
         Box::new(FileMeasurer::new()),
+        Box::new(ModelDirMeasurer::new()),
         // Box::new(ProcessMeasurer::new()), // Example for future measurer
     ];
     // --------------------------
@@ -92,8 +96,13 @@ async fn main() -> Result<()> {
         config_path.unwrap_or_else(|| PathBuf::from("runtime-measurer-config.toml"));
 
     // Spawn config watchers
+    let config_handlers: Vec<Box<dyn ConfigChangeHandler>> = vec![
+        Box::new(FileMeasurementChangeHandler::new()),
+        Box::new(ModelDirMeasurementChangeHandler::new()),
+    ];
+
     let watchers: Vec<Box<dyn ConfigWatcher + Send + Sync>> = vec![Box::new(
-        crate::modules::file_config_watcher::FileConfigWatcher::new(),
+        ConfigFileWatcher::new(config_handlers),
     )];
     for watcher in watchers {
         if watcher.is_enabled(Arc::new(shared_config.read().await.clone())) {

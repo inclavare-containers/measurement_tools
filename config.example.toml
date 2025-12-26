@@ -13,6 +13,17 @@ files = [
   "/etc/trustiflux/*"
 ]
 
+[model_dir_measurement]
+enable = true
+# Optional PCR index used when extending runtime measurement; set to a number
+# when you want to bind the measurement to a specific PCR. Leave unset to let
+# AA decide.
+# pcr_index = 22
+# Path to the cryptpilot binary (defaults to "cryptpilot" in $PATH)
+# cryptpilot_binary = "/usr/local/bin/cryptpilot"
+# path to target directories
+directories = []
+
 # Future measurer configurations can be added here, e.g.:
 # [process_measurement]
 # enable = false

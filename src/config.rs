@@ -9,6 +9,8 @@ pub struct Config {
     pub attestation_agent_socket: String,
     #[serde(default)]
     pub file_measurement: FileMeasurementConfig,
+    #[serde(default)]
+    pub model_dir_measurement: ModelDirMeasurementConfig,
     // Add other measurement configs here as they are implemented
     // pub process_measurement: ProcessMeasurementConfig,
 }
@@ -25,6 +27,18 @@ pub struct FileMeasurementConfig {
     pub files: Vec<String>,
 }
 
+#[derive(Debug, Deserialize, Clone)]
+pub struct ModelDirMeasurementConfig {
+    #[serde(default = "default_false")]
+    pub enable: bool,
+    #[serde(default)]
+    pub pcr_index: Option<u32>,
+    #[serde(default = "default_cryptpilot_binary")]
+    pub cryptpilot_binary: String,
+    #[serde(default)]
+    pub directories: Vec<String>,
+}
+
 fn default_false() -> bool {
     false
 }
@@ -37,6 +51,10 @@ fn default_hash_algorithm() -> String {
     "sha256".to_string()
 }
 
+fn default_cryptpilot_binary() -> String {
+    "cryptpilot".to_string()
+}
+
 impl Default for FileMeasurementConfig {
     fn default() -> Self {
         Self {
@@ -44,6 +62,17 @@ impl Default for FileMeasurementConfig {
             pcr_index: default_pcr_index(),
             hash_algorithm: default_hash_algorithm(),
             files: Vec::new(),
+        }
+    }
+}
+
+impl Default for ModelDirMeasurementConfig {
+    fn default() -> Self {
+        Self {
+            enable: default_false(),
+            pcr_index: None,
+            cryptpilot_binary: default_cryptpilot_binary(),
+            directories: Vec::new(),
         }
     }
 }
