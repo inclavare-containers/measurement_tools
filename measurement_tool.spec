@@ -6,7 +6,8 @@ Version:        0.2.0
 Release:        %{alinux_release}%{?dist}
 Summary:        Runtime measurement tool for confidential computing environments
 Group:          Applications/System
-ExclusiveArch:  x86_64
+ExclusiveArch:  x86_64 aarch64
+%global rust_target %{_arch}-unknown-linux-gnu
 
 License:        Apache-2.0
 URL:            https://github.com/inclavare-containers/measurement_tools
@@ -40,14 +41,14 @@ tar xf %{SOURCE1} -C %{_builddir}/measurement_tool-%{version}
 export CARGO_HOME=%{_builddir}/.cargo
 export CARGO_VENDOR_DIR=%{_builddir}/measurement_tool-%{version}/vendor
 
-cargo build --release --locked --offline --target x86_64-unknown-linux-gnu
+cargo build --release --locked --offline --target %{rust_target}
 
 %install
 mkdir -p %{buildroot}%{_bindir}
 mkdir -p %{buildroot}%{config_dir}
 mkdir -p %{buildroot}%{_prefix}/lib/systemd/system
 
-install -m 755 target/x86_64-unknown-linux-gnu/release/measurement_tool %{buildroot}%{_bindir}/measurement_tool
+install -m 755 target/%{rust_target}/release/measurement_tool %{buildroot}%{_bindir}/measurement_tool
 install -m 644 config.example.toml %{buildroot}%{config_dir}/config.toml
 install -m 644 measurement_tool.service %{buildroot}%{_prefix}/lib/systemd/system/measurement_tool.service
 
@@ -87,4 +88,4 @@ fi
 - Initial package release
 - Runtime measurement tool for confidential computing
 - Support for file measurements
-- Integration with attestation-agent via ttrpc protocol 
+- Integration with attestation-agent via ttrpc protocol

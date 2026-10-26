@@ -5,8 +5,8 @@
 
 set -e
 
-# 默认版本号
-VERSION="0.1.0"
+# 默认使用 spec 版本，避免构建的源码包名与 %prep 不匹配。
+VERSION=$(awk '/^Version:/ { print $2; exit }' measurement_tool.spec)
 PACKAGE_NAME="measurement_tool"
 BUILD_DIR="$HOME/rpmbuild"
 SPEC_FILE="${PACKAGE_NAME}.spec"
@@ -331,4 +331,4 @@ main() {
 }
 
 # 脚本入口
-main "$@" 
+main "$@"
