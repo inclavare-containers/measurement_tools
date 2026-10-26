@@ -4,7 +4,8 @@ FROM ${BASE_IMAGE}
 
 # Cloud Linux images default to a VPC-only mirror; native CI also runs outside ECS.
 RUN sed -i -E 's|https?://mirrors.cloud.aliyuncs.com/|https://mirrors.aliyun.com/|g' /etc/yum.repos.d/*.repo
-RUN dnf install -y ca-certificates curl tar gzip xz rpm-build cargo gcc gcc-c++ protobuf-compiler protobuf-devel rsync rpmdevtools make file binutils
+RUN printf '\nmax_parallel_downloads=20\n' >> /etc/dnf/dnf.conf
+RUN dnf install -y ca-certificates curl tar gzip xz rpm-build gcc gcc-c++ protobuf-compiler protobuf-devel rsync rpmdevtools make file binutils
 
 ENV RUSTUP_HOME=/opt/rustup CARGO_HOME=/opt/cargo
 ENV PATH=/opt/cargo/bin:$PATH

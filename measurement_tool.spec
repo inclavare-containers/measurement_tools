@@ -14,8 +14,10 @@ URL:            https://github.com/inclavare-containers/measurement_tools
 Source0:        %{name}-%{version}.tar.gz
 Source1:        vendor.tar.gz
 
+%if 0%{!?with_rustup:1}
 BuildRequires:  rust
 BuildRequires:  cargo
+%endif
 BuildRequires:  gcc
 BuildRequires:  protobuf-compiler
 BuildRequires:  protobuf-devel

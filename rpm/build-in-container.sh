@@ -5,7 +5,7 @@ mkdir -p /work /build/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
 tar -xzf /output/source.tar.gz -C /work
 cd /work
 arch=$(rpm --eval '%{_arch}')
-bash build_rpm.sh
+WITH_RUSTUP=1 bash build_rpm.sh
 cp -a /root/rpmbuild/RPMS /root/rpmbuild/SRPMS /build/
 
 # Check package metadata and executable dependencies on the actual build platform.
