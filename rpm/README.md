@@ -18,6 +18,7 @@ The native RPM workflow builds both architectures and installs/runs the packages
 
 For a native build without Docker, install the spec's build dependencies plus
 `rpmdevtools`, `rsync` and Rust/Cargo, then run `bash build_rpm.sh`.
+With a rustup-provided toolchain, use `WITH_RUSTUP=1 bash build_rpm.sh` instead.
 The version defaults to `measurement_tool.spec`; both supported architectures
 use the corresponding GNU Rust target. Container smoke tests skip installation
 of the separately packaged Attestation Agent dependency.

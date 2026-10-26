@@ -154,6 +154,10 @@ copy_spec() {
 # 构建RPM包
 build_rpm() {
     log_info "开始构建RPM包..."
+    local toolchain_args=()
+    if [ "${WITH_RUSTUP:-0}" = 1 ]; then
+        toolchain_args+=(--define 'with_rustup 1')
+    fi
     
     # 在构建目录中执行构建
     (
@@ -161,11 +165,11 @@ build_rpm() {
         
         # 构建源码RPM
         log_info "构建源码RPM..."
-        rpmbuild -bs "SPECS/${SPEC_FILE}"
+        rpmbuild "${toolchain_args[@]}" -bs "SPECS/${SPEC_FILE}"
         
         # 构建二进制RPM
         log_info "构建二进制RPM..."
-        rpmbuild -bb "SPECS/${SPEC_FILE}"
+        rpmbuild "${toolchain_args[@]}" -bb "SPECS/${SPEC_FILE}"
     )
     
     log_info "RPM构建完成!"
