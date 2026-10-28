@@ -159,3 +159,15 @@ fn default_ttrpc_context() -> ttrpc::context::Context {
         ..Default::default()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn rejects_punycode_labels_that_mask_ascii_hosts() {
+        // CVE-2024-12224: these labels used to normalize to example.org.
+        for endpoint in ["https://xn--example-.org/", "https://example.org.xn--/"] {
+            assert!(reqwest::Url::parse(endpoint).is_err(), "{endpoint}");
+        }
+        assert!(reqwest::Url::parse("https://example.org/").is_ok());
+    }
+}
